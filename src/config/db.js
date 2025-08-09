@@ -7,6 +7,7 @@ import { URL } from "url";
 if (process.env.NODE_ENV !== "production") {
   dotenv.config({ path: ".env.local" });
 }
+console.log("DATABASE_URL:", process.env.DATABASE_URL);
 
 const dbUrl = process.env.DATABASE_URL;
 
