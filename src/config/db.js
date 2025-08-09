@@ -1,32 +1,47 @@
 import mysql from "mysql2/promise";
 import { Sequelize } from "sequelize";
 import dotenv from "dotenv";
+import { URL } from "url";
 
-const envFile = process.env.NODE_ENV === "production" ? ".env" : ".env.local";
-dotenv.config({ path: envFile });
+// Only load .env locally
+if (process.env.NODE_ENV !== "production") {
+  dotenv.config({ path: ".env.local" });
+}
 
-const { DB_HOST, DB_USER, DB_PASS, DB_NAME, DB_PORT } = process.env;
+const dbUrl = process.env.DATABASE_URL;
 
-// Step 1: Create DB if it doesn't exist
+if (!dbUrl) {
+  throw new Error("❌ DATABASE_URL not set in environment variables");
+}
+
+const parsed = new URL(dbUrl);
+
+const DB_HOST = parsed.hostname;
+const DB_PORT = parsed.port || 3306;
+const DB_USER = parsed.username;
+const DB_PASS = parsed.password;
+const DB_NAME = parsed.pathname.replace("/", "");
+
+// Step 1: Create DB if not exists (only works if user has permission)
 async function ensureDatabase() {
   const connection = await mysql.createConnection({
     host: DB_HOST,
     user: DB_USER,
     password: DB_PASS,
-    port: DB_PORT || 3306,
+    port: DB_PORT,
   });
   await connection.query(`CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\`;`);
   await connection.end();
 }
 
-await ensureDatabase(); // run immediately
+await ensureDatabase();
 
-// Step 2: Initialize Sequelize instance
+// Step 2: Initialize Sequelize
 const sequelize = new Sequelize(DB_NAME, DB_USER, DB_PASS, {
   host: DB_HOST,
   dialect: "mysql",
-  port: DB_PORT || 3306,
-  logging: false, // disable SQL logs
+  port: DB_PORT,
+  logging: false,
 });
 
 try {
