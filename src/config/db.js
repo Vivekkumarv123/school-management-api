@@ -35,21 +35,30 @@ async function ensureDatabase() {
   await connection.end();
 }
 
-await ensureDatabase();
-
 // Step 2: Initialize Sequelize
-const sequelize = new Sequelize(DB_NAME, DB_USER, DB_PASS, {
-  host: DB_HOST,
-  dialect: "mysql",
-  port: DB_PORT,
-  logging: false,
-});
-
-try {
-  await sequelize.authenticate();
-  console.log("✅ Database connected & ready");
-} catch (err) {
-  console.error("❌ Database connection error:", err);
+function getSequelizeInstance() {
+  return new Sequelize(DB_NAME, DB_USER, DB_PASS, {
+    host: DB_HOST,
+    dialect: "mysql",
+    port: DB_PORT,
+    logging: false,
+    dialectOptions: {
+      charset: "utf8mb4", // enforce UTF-8 encoding, avoid cesu8 issues
+    },
+  });
 }
 
-export default sequelize;
+// Export an async function to initialize and return the Sequelize instance
+export default async function initializeSequelize() {
+  await ensureDatabase();
+  const sequelize = getSequelizeInstance();
+  try {
+    await sequelize.authenticate();
+    console.log("✅ Database connected & ready");
+  } catch (err) {
+    console.error("❌ Database connection error:", err);
+    throw err;
+  }
+  return sequelize;
+}
+
