@@ -23,6 +23,8 @@ jobs:
 
       - name: Run tests
         run: npm test
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
       - name: Install Railway CLI
         run: npm install -g railway
