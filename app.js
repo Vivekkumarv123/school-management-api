@@ -8,7 +8,7 @@ app.use(express.json());
 
 // Default route
 app.get("/", (req, res) => {
-  res.send("School Management API is running .🚀");
+  res.send("School Management API is running 🚀");
 });
 
 // Version endpoint for testing
